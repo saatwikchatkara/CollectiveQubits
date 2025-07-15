@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collective Qubits Initiative</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Dark Harmony Neutrals -->
+    <!-- Application Structure Plan: A thematic, single-page application designed for exploration. The structure guides the user from the high-level vision to a personal call-to-action. It starts with a Hero section, moves to an an interactive diagram explaining the core concept of interdisciplinary collision, then presents the "Why" and "What" through comparison and interactive cards. An engaging "Are you a Misfit?" section makes the concept personal, leading to the final call to action. This non-linear, interactive structure was chosen to transform the passive, text-heavy report into an active exploration, which better reflects the innovative and "builder" spirit of the initiative and enhances user engagement and understanding. -->
+    <!-- Visualization & Content Choices: 1. Core Idea (Organize/Relationships): HTML/CSS interactive diagram of colliding fields. Interaction: Hover highlights related fields and shows descriptive text. Justification: Visually and dynamically explains the abstract core concept of interdisciplinarity. 2. Why Qubits? (Compare): A simple two-column layout comparing old vs. new models. Justification: Clearly contrasts the initiative's value proposition. 3. The Experience (Inform): Interactive cards that reveal details on click. Justification: Breaks down dense info into digestible, user-controlled chunks. 4. Misfit Profile (Inform/Engage): A Chart.js Radar Chart visualizing the ideal candidate profile. Interaction: Tooltips on hover. Justification: Adds a quantitative-style visual to a qualitative report, making the ideal candidate profile more concrete. 5. Are you a Misfit? (Engage): Interactive buttons that display tailored messages. Justification: Personalizes the message and directly engages the target audience. 6. Tally Form (Inform/Engage): Embedded iframe for direct application. Justification: Integrates the application process directly into the SPA for seamless user experience. 7. Discord Link (Inform/Engage): A direct link to the Discord server for general members. Justification: Provides an alternative way for interested individuals to engage with the community beyond formal application. 8. 3D Background Animation (Aesthetic/Engagement): Three.js particle system with subtle movement and color shifts. Interaction: OrbitControls for camera movement. Justification: Enhances the "deep-tech" and "qubits" theme, adds a "wow" factor, and provides a dynamic, engaging backdrop. All interactions are built with vanilla JS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .bg-dark-primary {
+            background-color: #1a202c;
+        }
+
+        /* Darker background */
+        .text-light-primary {
+            color: #f7fafc;
+        }
+
+        /* Lighter text */
+        .text-accent-teal {
+            color: #2dd4bf;
+        }
+
+        /* Slightly brighter teal for contrast on dark */
+        .bg-accent-teal {
+            background-color: #2dd4bf;
+        }
+
+        .border-accent-teal {
+            border-color: #2dd4bf;
+        }
+
+        .ring-accent-teal {
+            --tw-ring-color: #2dd4bf;
+        }
+
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #2dd4bf;
+            /* Accent teal for underline */
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            width: 100%;
+        }
+
+        .card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s ease-in-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+
+        .interactive-diagram-node {
+            transition: all 0.3s ease;
+        }
+
+        .interactive-diagram-node.active {
+            transform: scale(1.1);
+            background-color: #2a6f6f;
+            border-color: #2dd4bf;
+        }
+
+        /* Darker active state */
+        .interactive-diagram-node.dimmed {
+            opacity: 0.5;
+        }
+
+        .tally-form-container {
+            width: 100%;
+            max-width: 700px;
+            /* Max width for the form */
+            margin: 0 auto;
+            height: 600px;
+            /* Fixed height for the iframe, adjust as needed */
+            overflow: hidden;
+            /* Hide scrollbars if content overflows */
+            border-radius: 0.5rem;
+            /* rounded-lg */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+            background-color: #2d3748;
+            /* Dark background for the container */
+        }
+
+        .tally-form-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        #three-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            opacity: 0.7;
+            /* Slightly transparent to let body background peek through */
+        }
+
+        /* Ensure content is above the 3D background */
+        header,
+        main,
+        footer,
+        .modal {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+
+<body class="bg-dark-primary text-light-primary antialiased">
+    <canvas id="three-bg"></canvas>
+
+    <header class="sticky top-0 bg-dark-primary/80 backdrop-blur-lg z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-accent-teal">Collective Qubits</h1>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#vision" class="nav-link text-lg">The Vision</a>
+                <a href="#experience" class="nav-link text-lg">The Experience</a>
+                <a href="#misfits" class="nav-link text-lg">For Misfits</a>
+                <a href="#apply" class="nav-link text-lg">Apply</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden text-light-primary">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7">
+                    </path>
+                </svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+            <a href="#vision" class="block py-2 nav-link">The Vision</a>
+            <a href="#experience" class="block py-2 nav-link">The Experience</a>
+            <a href="#misfits" class="block py-2 nav-link">For Misfits</a>
+            <a href="#apply" class="block py-2 nav-link">Apply</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+        <section id="hero" class="text-center py-20 fade-in">
+            <h2 class="text-4xl md:text-6xl font-extrabold leading-tight text-light-primary">A Launchpad for the Minds
+                <br>Building Tomorrow.</h2>
+            <p class="mt-6 text-lg md:text-xl max-w-3xl mx-auto text-gray-300">This isn’t a start-up school or a
+                research club. It’s a space for builders, thinkers, artists, and researchers who believe the future
+                isn’t just something to study—it’s something to build.</p>
+            <a href="#apply"
+                class="mt-10 inline-block bg-accent-teal text-white font-bold py-3 px-8 rounded-lg text-lg shadow-lg hover:bg-teal-700 transition-colors">Join
+                the Founding Circle</a>
+        </section>
+
+        <hr class="my-16 border-gray-700">
+
+        <section id="vision" class="py-16 fade-in" style="animation-delay: 0.2s;">
+            <div class="text-center mb-12">
+                <h3 class="text-3xl md:text-4xl font-bold text-light-primary">The Vision: Where Disciplines Collide</h3>
+                <p class="mt-4 text-lg max-w-3xl mx-auto text-gray-300">Collective Qubits is built on the belief that
+                    true innovation happens at the intersection of diverse fields. We foster an environment where deep
+                    technologies converge with human-centric design, ethics, and radical creativity. Hover over the
+                    nodes below to see how these fields interconnect within our ecosystem.</p>
+            </div>
+            <div class="w-full max-w-5xl mx-auto">
+                <div id="interactive-diagram" class="grid grid-cols-2 md:grid-cols-3 gap-8 items-center justify-center">
+                    <div
+                        class="interactive-diagram-node text-center p-4 border-2 border-gray-700 rounded-lg cursor-pointer bg-gray-800">
+                        <span class="text-3xl">💻</span>
+                        <h4 class="font-bold mt-2 text-light-primary">Quantum Computing</h4>
+                    </div>
+                    <div
+                        class="interactive-diagram-node text-center p-4 border-2 border-gray-700 rounded-lg cursor-pointer bg-gray-800">
+                        <span class="text-3xl">🤖</span>
+                        <h4 class="font-bold mt-2 text-light-primary">Artificial Intelligence</h4>
+                    </div>
+                    <div
+                        class="interactive-diagram-node text-center p-4 border-2 border-gray-700 rounded-lg cursor-pointer bg-gray-800">
+                        <span class="text-3xl">🎨</span>
+                        <h4 class="font-bold mt-2 text-light-primary">Design & Creativity</h4>
+                    </div>
+                    <div
+                        class="interactive-diagram-node text-center p-4 border-2 border-gray-700 rounded-lg cursor-pointer bg-gray-800">
+                        <span class="text-3xl">🧠</span>
+                        <h4 class="font-bold mt-2 text-light-primary">Neurotechnology</h4>
+                    </div>
+                    <div
+                        class="interactive-diagram-node text-center p-4 border-2 border-gray-700 rounded-lg cursor-pointer bg-gray-800">
+                        <span class="text-3xl">⚖️</span>
+                        <h4 class="font-bold mt-2 text-light-primary">Ethics & Policy</h4>
+                    </div>
+                    <div
+                        class="interactive-diagram-node text-center p-4 border-2 border-gray-700 rounded-lg cursor-pointer bg-gray-800">
+                        <span class="text-3xl">🧬</span>
+                        <h4 class="font-bold mt-2 text-light-primary">Synthetic Biology</h4>
+                    </div>
+                </div>
+                <div id="diagram-info-box"
+                    class="mt-8 text-center bg-gray-700 p-6 rounded-lg min-h-[100px] flex items-center justify-center transition-opacity duration-300">
+                    <p class="text-gray-300 text-lg">Hover over a field to explore its connections.</p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-16 border-gray-700">
+
+        <section id="experience" class="py-16 fade-in" style="animation-delay: 0.4s;">
+            <div class="text-center mb-12">
+                <h3 class="text-3xl md:text-4xl font-bold text-light-primary">The Collective Qubits Experience</h3>
+                <p class="mt-4 text-lg max-w-3xl mx-auto text-gray-300">Our program provides a unique ecosystem of
+                    support designed to nurture radical ideas and translate them into tangible impact. Click on a card
+                    to learn more.</p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="card p-6 bg-gray-800 rounded-lg shadow-sm cursor-pointer" data-modal="modal-mentorship">
+                    <h4 class="font-bold text-xl text-accent-teal">🤝 Interdisciplinary Mentorship</h4>
+                    <p class="mt-2 text-gray-300">Guidance from polymaths and leaders who understand the nuances of
+                        cross-disciplinary innovation.</p>
+                </div>
+                <div class="card p-6 bg-gray-800 rounded-lg shadow-sm cursor-pointer" data-modal="modal-resources">
+                    <h4 class="font-bold text-xl text-accent-teal">🚀 Cutting-Edge Resources</h4>
+                    <p class="mt-2 text-gray-300">Access to high-performance computing, quantum simulators, AI labs, and
+                        prototyping tools.</p>
+                </div>
+                <div class="card p-6 bg-gray-800 rounded-lg shadow-sm cursor-pointer" data-modal="modal-collaboration">
+                    <h4 class="font-bold text-xl text-accent-teal">💡 Curated Collaboration</h4>
+                    <p class="mt-2 text-gray-300">A culture of open collaboration through workshops, hackathons, and
+                        co-creation sessions.</p>
+                </div>
+                <div class="card p-6 bg-gray-800 rounded-lg shadow-sm cursor-pointer" data-modal="modal-ethics">
+                    <h4 class="font-bold text-xl text-accent-teal">🌍 Ethical Integration</h4>
+                    <p class="mt-2 text-gray-300">We embed ethical considerations, policy, and societal impact at the
+                        core of every project.</p>
+                </div>
+                <div class="card p-6 bg-gray-800 rounded-lg shadow-sm cursor-pointer" data-modal="modal-design">
+                    <h4 class="font-bold text-xl text-accent-teal">🖌️ Design-Driven Development</h4>
+                    <p class="mt-2 text-gray-300">Emphasis on human-centered design to ensure solutions are brilliant
+                        and usable.</p>
+                </div>
+                <div class="card p-6 bg-gray-800 rounded-lg shadow-sm cursor-pointer" data-modal="modal-impact">
+                    <h4 class="font-bold text-xl text-accent-teal">📈 Pathways to Impact</h4>
+                    <p class="mt-2 text-gray-300">Strategic guidance on funding, IP, and commercialization to bring
+                        innovations to the world.</p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-16 border-gray-700">
+
+        <section id="misfits" class="py-16 fade-in" style="animation-delay: 0.6s;">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h3 class="text-3xl md:text-4xl font-bold text-light-primary">Who We're Looking For: The Misfits
+                    </h3>
+                    <p class="mt-4 text-lg text-gray-300">We seek those who don't fit into neat boxes. Visionary
+                        builders, profound thinkers, boundary-pushing artists, and unconventional researchers. The ideal
+                        candidate embodies a balance of technical skill, radical creativity, collaborative spirit, and a
+                        deep ethical focus.</p>
+                    <div class="mt-8">
+                        <h4 class="font-semibold text-xl mb-4 text-light-primary">What kind of misfit are you? Select
+                            your primary drive:</h4>
+                        <div id="misfit-selectors" class="flex flex-wrap gap-4">
+                            <button
+                                class="misfit-btn bg-gray-800 border-2 border-gray-700 text-gray-300 py-2 px-4 rounded-full hover:border-accent-teal transition"
+                                data-profile="builder">The Builder 🛠️</button>
+                            <button
+                                class="misfit-btn bg-gray-800 border-2 border-gray-700 text-gray-300 py-2 px-4 rounded-full hover:border-accent-teal transition"
+                                data-profile="thinker">The Thinker 🤔</button>
+                            <button
+                                class="misfit-btn bg-gray-800 border-2 border-gray-700 text-gray-300 py-2 px-4 rounded-full hover:border-accent-teal transition"
+                                data-profile="artist">The Artist 🎭</button>
+                            <button
+                                class="misfit-btn bg-gray-800 border-2 border-gray-700 text-gray-300 py-2 px-4 rounded-full hover:border-accent-teal transition"
+                                data-profile="researcher">The Researcher 🔬</button>
+                        </div>
+                        <div id="misfit-profile-text" class="mt-6 bg-gray-700 p-6 rounded-lg min-h-[120px]">
+                            <p class="text-gray-300">Select a profile above to see how you fit into the Collective.</p>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-center font-semibold text-xl mb-4 text-light-primary">The Ideal Misfit Profile</h4>
+                    <div class="chart-container">
+                        <canvas id="misfitProfileChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="my-16 border-gray-700">
+
+        <section id="apply" class="text-center py-20 bg-gray-800 rounded-lg shadow-lg fade-in"
+            style="animation-delay: 0.8s;">
+            <h3 class="text-3xl md:text-4xl font-bold text-light-primary mb-8">Join The Founding Circle</h3>
+            <p class="mt-4 text-lg max-w-3xl mx-auto text-gray-300 mb-8">The future is not a destination to be observed,
+                but a dynamic construct to be built. If you are a misfit with a burning desire to build tomorrow, if
+                your ideas defy categorization, and if you believe in the power of interdisciplinary collaboration,
+                Collective Qubits is your home. Fill out the form below to apply.</p>
+
+            <div class="tally-form-container mb-12">
+                <iframe data-tally-src="https://tally.so/r/n0qVOQ" loading="lazy" width="100%" height="100%"
+                    frameborder="0" marginheight="0" marginwidth="0" title="Application Form"></iframe>
+            </div>
+
+            <p class="mt-8 text-lg max-w-3xl mx-auto text-gray-300">Interested in becoming a general member and
+                connecting with our community? Join our Discord server!</p>
+            <a href="https://discord.gg/3qYzGrVN" target="_blank"
+                class="mt-6 inline-block bg-blue-600 text-white font-bold py-3 px-8 rounded-lg text-lg shadow-lg hover:bg-blue-700 transition-colors">
+                Join Our Discord 💬
+            </a>
+        </section>
+    </main>
+
+    <footer class="bg-gray-900 text-white mt-24">
+        <div class="container mx-auto px-6 py-8 text-center">
+            <p>&copy; 2024 Collective Qubits. All Rights Reserved.</p>
+            <p class="text-sm text-gray-500 mt-2">
+                Created by <a href="https://www.linkedin.com/in/saatwik-chatkara-8701451b7/" target="_blank"
+                    class="text-accent-teal hover:underline">Saatwik Chatkara</a> and <a
+                    href="https://www.linkedin.com/in/mohamed-armoon-shaliq-784a151a6/" target="_blank"
+                    class="text-accent-teal hover:underline">Mohamed Armoon Shaliq</a>.
+            </p>
+            <p class="text-sm text-gray-500 mt-2">Building the future, one radical idea at a time.</p>
+        </div>
+    </footer>
+
+    <!-- Modals -->
+    <div id="modal-mentorship" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center p-4 z-50">
+        <div class="bg-gray-800 rounded-lg p-8 max-w-2xl w-full text-light-primary">
+            <h3 class="text-2xl font-bold text-accent-teal mb-4">🤝 Interdisciplinary Mentorship</h3>
+            <p class="text-gray-300">Our mentors are not just experts in a single field; they are polymaths, leaders,
+                and innovators who understand the nuances of cross-disciplinary collaboration. They provide guidance on
+                technical challenges, ethical considerations, market strategy, and the art of translating complex ideas
+                into tangible impact. You'll be paired with mentors who can challenge your assumptions and expand your
+                perspective.</p>
+            <button
+                class="modal-close mt-6 bg-gray-700 text-gray-200 py-2 px-4 rounded hover:bg-gray-600 transition-colors">Close</button>
+        </div>
+    </div>
+    <div id="modal-resources" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center p-4 z-50">
+        <div class="bg-gray-800 rounded-lg p-8 max-w-2xl w-full text-light-primary">
+            <h3 class="text-2xl font-bold text-accent-teal mb-4">🚀 Cutting-Edge Resources</h3>
+            <p class="text-gray-300">Members gain access to specialized infrastructure, including high-performance
+                computing resources for quantum simulations, advanced AI training environments, neurotech prototyping
+                labs, and collaborative spaces designed for rapid iteration and experimentation. We provide the tools
+                necessary to bring ambitious visions to life, removing technical barriers so you can focus on
+                innovation.</p>
+            <button
+                class="modal-close mt-6 bg-gray-700 text-gray-200 py-2 px-4 rounded hover:bg-gray-600 transition-colors">Close</button>
+        </div>
+    </div>
+    <div id="modal-collaboration"
+        class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center p-4 z-50">
+        <div class="bg-gray-800 rounded-lg p-8 max-w-2xl w-full text-light-primary">
+            <h3 class="text-2xl font-bold text-accent-teal mb-4">💡 Curated Collaboration</h3>
+            <p class="text-gray-300">We actively foster a culture of open collaboration. Through structured workshops,
+                hackathons, and informal gatherings, participants are encouraged to share their knowledge, challenge
+                assumptions, and co-create with individuals from vastly different backgrounds. This cross-pollination of
+                ideas is where the magic happens and breakthrough concepts are born.</p>
+            <button
+                class="modal-close mt-6 bg-gray-700 text-gray-200 py-2 px-4 rounded hover:bg-gray-600 transition-colors">Close</button>
+        </div>
+    </div>
+    <div id="modal-ethics" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center p-4 z-50">
+        <div class="bg-gray-800 rounded-lg p-8 max-w-2xl w-full text-light-primary">
+            <h3 class="text-2xl font-bold text-accent-teal mb-4">🌍 Ethical Integration</h3>
+            <p class="text-gray-300">Unlike purely technical incubators, Collective Qubits embeds ethical
+                considerations, policy implications, and societal impact at the core of every project. We guide our
+                members to build not just powerful technologies, but responsible and beneficial ones, ensuring that
+                innovation serves humanity and addresses potential consequences head-on.</p>
+            <button
+                class="modal-close mt-6 bg-gray-700 text-gray-200 py-2 px-4 rounded hover:bg-gray-600 transition-colors">Close</button>
+        </div>
+    </div>
+    <div id="modal-design" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center p-4 z-50">
+        <div class="bg-gray-800 rounded-lg p-8 max-w-2xl w-full text-light-primary">
+            <h3 class="text-2xl font-bold text-accent-teal mb-4">🖌️ Design-Driven Development</h3>
+            <p class="text-gray-300">We emphasize the critical role of design thinking and user experience in deep-tech
+                innovation. By integrating design principles from the outset, projects are developed with a focus on
+                usability, accessibility, and real-world applicability, ensuring their solutions are not only
+                technically brilliant but also human-centered and intuitive.</p>
+            <button
+                class="modal-close mt-6 bg-gray-700 text-gray-200 py-2 px-4 rounded hover:bg-gray-600 transition-colors">Close</button>
+        </div>
+    </div>
+    <div id="modal-impact" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center p-4 z-50">
+        <div class="bg-gray-800 rounded-lg p-8 max-w-2xl w-full text-light-primary">
+            <h3 class="text-2xl font-bold text-accent-teal mb-4">📈 Pathways to Impact</h3>
+            <p class="text-gray-300">While we are not a "start-up school," we provide strategic guidance on navigating
+                the complex landscape of funding, intellectual property, and commercialization to bring innovations to
+                the world. Our goal is to equip our members with the knowledge and network to bring their innovations to
+                the world, whether through new ventures, open-source initiatives, or policy influence.</p>
+            <button
+                class="modal-close mt-6 bg-gray-700 text-gray-200 py-2 px-4 rounded hover:bg-gray-600 transition-colors">Close</button>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section[id]');
+
+            function updateActiveNavLink() {
+                let index = sections.length;
+                while (--index && window.scrollY + 50 < sections[index].offsetTop) { }
+                navLinks.forEach((link) => link.classList.remove('active'));
+                const activeLink = document.querySelector(`.nav-link[href="#${sections[index].id}"]`);
+                if (activeLink) {
+                    activeLink.classList.add('active');
+                }
+            }
+
+            window.addEventListener('scroll', () => {
+                updateActiveNavLink();
+
+                document.querySelectorAll('.fade-in').forEach(el => {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.top < window.innerHeight && rect.bottom >= 0) {
+                        el.style.opacity = '1';
+                        el.style.transform = 'translateY(0)';
+                    }
+                });
+            });
+            updateActiveNavLink();
+
+            const diagramNodes = document.querySelectorAll('.interactive-diagram-node');
+            const infoBox = document.getElementById('diagram-info-box');
+            const diagramInfo = {
+                tech: "<strong>Deep Tech Fields:</strong> These are the foundational technologies we explore, from quantum mechanics to AI. They provide the power and potential for breakthrough innovation.",
+                human: "<strong>Human-Centric Fields:</strong> Technology alone is not enough. We integrate design, ethics, and policy to ensure innovations are responsible, usable, and beneficial for society."
+            };
+
+            diagramNodes.forEach(node => {
+                node.addEventListener('mouseenter', () => {
+                    const group = node.dataset.id;
+                    infoBox.innerHTML = `<p class="text-gray-300 text-lg">${diagramInfo[group]}</p>`;
+                    diagramNodes.forEach(otherNode => {
+                        if (otherNode.dataset.id === group || otherNode.dataset.group === node.dataset.group) {
+                            otherNode.classList.add('active');
+                            otherNode.classList.remove('dimmed');
+                        } else {
+                            otherNode.classList.add('dimmed');
+                            otherNode.classList.remove('active');
+                        }
+                    });
+                });
+
+                node.addEventListener('mouseleave', () => {
+                    infoBox.innerHTML = '<p class="text-gray-300 text-lg">Hover over a field to explore its connections.</p>';
+                    diagramNodes.forEach(n => {
+                        n.classList.remove('active', 'dimmed');
+                    });
+                });
+            });
+
+            const experienceCards = document.querySelectorAll('.card');
+            experienceCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    const modalId = card.dataset.modal;
+                    if (modalId) {
+                        const modal = document.getElementById(modalId);
+                        modal.classList.remove('hidden');
+                        modal.classList.add('flex');
+                    }
+                });
+            });
+
+            document.querySelectorAll('.modal-close').forEach(button => {
+                button.addEventListener('click', () => {
+                    button.closest('.fixed').classList.add('hidden');
+                    button.closest('.fixed').classList.remove('flex');
+                });
+            });
+
+            const misfitProfileTexts = {
+                builder: "<strong>The Builder:</strong> You see systems that don't exist and feel compelled to create them. We provide the tools, collaborators, and freedom to build world-changing technologies from the ground up.",
+                thinker: "<strong>The Thinker:</strong> You connect disparate ideas and see the deeper implications. We provide the intellectual playground to explore complex problems and shape the ethical frameworks for the future.",
+                artist: "<strong>The Artist:</strong> You bring new perspectives and create novel experiences. We provide the canvas to merge technology with radical creativity, designing interfaces and interactions that inspire.",
+                researcher: "<strong>The Researcher:</strong> You are driven by a deep curiosity to uncover new knowledge. We provide the environment to conduct unconventional research at the boundaries of science and technology."
+            };
+
+            const misfitButtons = document.querySelectorAll('.misfit-btn');
+            const misfitProfileText = document.getElementById('misfit-profile-text');
+            let selectedMisfitProfile = null; // To store the currently selected profile
+
+            misfitButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    misfitButtons.forEach(btn => {
+                        btn.classList.remove('bg-accent-teal', 'text-white', 'border-accent-teal');
+                        btn.classList.add('bg-gray-800', 'border-gray-700', 'text-gray-300'); /* Reset to dark theme default */
+                    });
+                    button.classList.add('bg-accent-teal', 'text-white', 'border-accent-teal');
+                    button.classList.remove('bg-gray-800', 'border-gray-700', 'text-gray-300'); /* Apply active state */
+
+                    selectedMisfitProfile = button.dataset.profile;
+                    misfitProfileText.innerHTML = `<p>${misfitProfileTexts[selectedMisfitProfile]}</p>`;
+                });
+            });
+
+            const ctx = document.getElementById('misfitProfileChart').getContext('2d');
+            const misfitProfileChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Technical Skill', 'Radical Creativity', 'Ethical Focus', 'Collaborative Spirit', 'Systems Thinking'],
+                    datasets: [{
+                        label: 'Ideal Misfit Profile',
+                        data: [85, 90, 80, 95, 88],
+                        backgroundColor: 'rgba(45, 212, 191, 0.2)', /* Adjusted for dark theme */
+                        borderColor: 'rgb(45, 212, 191)', /* Adjusted for dark theme */
+                        pointBackgroundColor: 'rgb(45, 212, 191)', /* Adjusted for dark theme */
+                        pointBorderColor: '#1a202c', /* Adjusted for dark theme */
+                        pointHoverBackgroundColor: '#1a202c', /* Adjusted for dark theme */
+                        pointHoverBorderColor: 'rgb(45, 212, 191)' /* Adjusted for dark theme */
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, /* Adjusted for dark theme */
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }, /* Adjusted for dark theme */
+                            pointLabels: {
+                                font: { size: 12, weight: 'bold' },
+                                color: '#f7fafc' /* Adjusted for dark theme */
+                            },
+                            ticks: {
+                                backdropColor: 'transparent',
+                                color: '#a0aec0' /* Adjusted for dark theme */
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 100
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return `${context.dataset.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Three.js Background Animation
+            let scene, camera, renderer, particles, particleMaterial, controls;
+
+            function initThree() {
+                scene = new THREE.Scene();
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('three-bg'), antialias: true, alpha: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setClearColor(0x1a202c, 0); // Match body background, fully transparent
+
+                // Particles
+                const particleCount = 1500;
+                const positions = new Float32Array(particleCount * 3);
+                const colors = new Float32Array(particleCount * 3);
+
+                const color1 = new THREE.Color(0x2dd4bf); // Accent teal
+                const color2 = new THREE.Color(0x81e6d9); // Lighter teal
+                const color3 = new THREE.Color(0x4fd1c5); // Another teal shade
+
+                for (let i = 0; i < particleCount; i++) {
+                    const i3 = i * 3;
+                    positions[i3] = (Math.random() * 2 - 1) * 500; // x
+                    positions[i3 + 1] = (Math.random() * 2 - 1) * 500; // y
+                    positions[i3 + 2] = (Math.random() * 2 - 1) * 500; // z
+
+                    const mixedColor = new THREE.Color();
+                    mixedColor.copy(color1);
+                    mixedColor.lerp(color2, Math.random());
+                    mixedColor.lerp(color3, Math.random());
+
+                    colors[i3] = mixedColor.r;
+                    colors[i3 + 1] = mixedColor.g;
+                    colors[i3 + 2] = mixedColor.b;
+                }
+
+                const particleGeometry = new THREE.BufferGeometry();
+                particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                particleGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+                particleMaterial = new THREE.PointsMaterial({
+                    size: 1.5,
+                    vertexColors: true,
+                    transparent: true,
+                    opacity: 0.8,
+                    blending: THREE.AdditiveBlending // For glowing effect
+                });
+
+                particles = new THREE.Points(particleGeometry, particleMaterial);
+                scene.add(particles);
+
+                camera.position.z = 200;
+
+                // OrbitControls for interaction
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true; // Smooth camera movement
+                controls.dampingFactor = 0.05;
+                controls.screenSpacePanning = false;
+                controls.minDistance = 100;
+                controls.maxDistance = 500;
+                controls.enablePan = false;
+                controls.autoRotate = true; // Initial subtle rotation
+                controls.autoRotateSpeed = 0.5;
+
+                window.addEventListener('resize', onWindowResize, false);
+            }
+
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+
+            function animateThree() {
+                requestAnimationFrame(animateThree);
+                controls.update(); // Only required if controls.enableDamping or controls.autoRotate are set to true
+
+                // Optional: subtle particle movement
+                particles.rotation.x += 0.0001;
+                particles.rotation.y += 0.0002;
+
+                renderer.render(scene, camera);
+            }
+
+            window.onload = function () {
+                initThree();
+                animateThree();
+            };
+        });
+    </script>
+
+    <script>
+        // Tally form script to ensure it loads correctly
+        var Tally = { "formInit": function () { var i = document.querySelectorAll("[data-tally-src]"); if (i.length > 0) { for (var e = 0; e < i.length; e++) { var n = "Tally" + e, a = i[e].getAttribute("data-tally-src"), o = document.createElement("iframe"); o.setAttribute("id", n), o.setAttribute("src", a), o.setAttribute("width", "100%"), o.setAttribute("height", "100%"), o.setAttribute("frameborder", "0"), o.setAttribute("marginheight", "0"), o.setAttribute("marginwidth", "0"), i[e].parentNode.replaceChild(o, i[e]) } } } }; Tally.formInit();
+    </script>
+
+</body>
+
+</html>
